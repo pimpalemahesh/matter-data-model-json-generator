@@ -1,0 +1,158 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "matter-data-model-json-generator"
+version = "1.0.0"
+description = "A tool to parse Matter XML data models and generate JSON representations"
+readme = "README.md"
+license = { text = "Apache-2.0" }
+authors = [{ name = "Mahesh Pimpale", email = "pimpalemahesh2021@gmail.com" }]
+maintainers = [
+  { name = "Mahesh Pimpale", email = "pimpalemahesh2021@gmail.com" },
+]
+keywords = [
+  "matter",
+  "xml",
+  "json",
+  "parser",
+  "iot",
+  "smart-home",
+  "connectedhomeip",
+]
+classifiers = [
+  "Development Status :: 5 - Production/Stable",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: Apache Software License",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.8",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Software Development :: Libraries :: Python Modules",
+  "Topic :: Software Development :: Code Generators",
+  "Topic :: Text Processing :: Markup :: XML",
+]
+requires-python = ">=3.8"
+dependencies = ["PyYAML>=6.0.1"]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=7.0.0",
+  "pytest-cov>=4.0.0",
+  "black>=22.0.0",
+  "flake8>=5.0.0",
+  "mypy>=1.0.0",
+  "bandit[toml]>=1.7.0",
+]
+docs = ["sphinx>=5.0.0", "sphinx-rtd-theme>=1.0.0"]
+
+[project.urls]
+Homepage = "https://github.com/pimpalemahesh/matter-data-model-json-generator"
+Documentation = "https://github.com/pimpalemahesh/matter-data-model-json-generator/wiki"
+Repository = "https://github.com/pimpalemahesh/matter-data-model-json-generator.git"
+"Bug Tracker" = "https://github.com/pimpalemahesh/matter-data-model-json-generator/issues"
+Changelog = "https://github.com/pimpalemahesh/matter-data-model-json-generator/blob/main/CHANGELOG.md"
+
+[project.scripts]
+matter-json-generator = "app:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["source_parser*", "core*", "utils*"]
+exclude = ["tests*", "examples*"]
+
+[tool.setuptools.package-data]
+"*" = ["*.yaml", "*.yml", "*.json"]
+
+[tool.black]
+line-length = 100
+target-version = ['py38']
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+  # directories
+  \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | build
+  | dist
+)/
+'''
+
+[tool.flake8]
+max-line-length = 100
+extend-ignore = ["E203", "W503"]
+exclude = [
+  ".git",
+  "__pycache__",
+  "build",
+  "dist",
+  ".eggs",
+  "*.egg-info",
+  ".venv",
+  ".tox",
+]
+
+[tool.mypy]
+python_version = "3.8"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false
+disallow_incomplete_defs = false
+check_untyped_defs = true
+disallow_untyped_decorators = false
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+warn_unreachable = true
+strict_equality = true
+
+[[tool.mypy.overrides]]
+module = ["yaml.*"]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+minversion = "7.0"
+addopts = "-ra -q --strict-markers --strict-config"
+testpaths = ["tests"]
+python_files = ["test_*.py", "*_test.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+markers = [
+  "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+  "integration: marks tests as integration tests",
+  "unit: marks tests as unit tests",
+]
+
+[tool.coverage.run]
+source = ["source_parser", "core", "utils"]
+omit = ["tests/*", "examples/*", "*/__pycache__/*", "*/site-packages/*"]
+
+[tool.coverage.report]
+exclude_lines = [
+  "pragma: no cover",
+  "def __repr__",
+  "if self.debug:",
+  "if settings.DEBUG",
+  "raise AssertionError",
+  "raise NotImplementedError",
+  "if 0:",
+  "if __name__ == .__main__.:",
+  "class .*\\bProtocol\\):",
+  "@(abc\\.)?abstractmethod",
+]
+
+[tool.bandit]
+exclude_dirs = ["tests", "examples"]
+skips = ["B101", "B601"]
+
+[tool.bandit.assert_used]
+skips = ["*_test.py", "test_*.py"]
