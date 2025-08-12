@@ -137,10 +137,13 @@ class DeviceParser:
 
                 # Check for mandatory conformance
                 mandatory_conform = cluster.find("mandatoryConform")
-                if (mandatory_conform is not None
-                        and mandatory_conform.find("condition") is None
-                        and len(mandatory_conform) == 0):
-                    cluster_info.is_mandatory = True
+                if mandatory_conform is not None:
+                    if mandatory_conform.find("condition") is None and len(mandatory_conform) == 0:
+                        cluster_info.is_mandatory = True
+                    else:
+                        cluster_info.mandatory_with_condition = True
+                else:
+                    cluster_info.is_mandatory = False
 
                 # Parse cluster features
                 features = cluster.find("features")

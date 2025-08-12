@@ -110,6 +110,7 @@ class FeatureSerializer:
             feature.get_id(),
             "code":
             safe_get_attr(feature, "code"),
+            "required": False,
             "attributes": [
                 AttributeSerializer.to_dict(attr, attribute_map)
                 for attr in feature.get_attribute_list()
@@ -163,6 +164,7 @@ class ClusterSerializer:
             cluster.get_id(),
             "revision":
             cluster.get_revision(),
+            "required": False,
             "attributes": [
                 AttributeSerializer.to_dict(attr, reference_map)
                 for attr in cluster.get_mandatory_attributes()
@@ -208,13 +210,14 @@ class DeviceSerializer:
                 ("server" if safe_get_attr(cluster, "server_cluster") else
                  ("client"
                   if safe_get_attr(cluster, "client_cluster") else None)),
+                "required": True if cluster.is_mandatory else "conditional" if cluster.mandatory_with_condition else False,
                 "features":
                 safe_get_attr(cluster, "feature_name_list", []),
                 "commands":
                 safe_get_attr(cluster, "command_name_list", []),
                 "attributes":
                 safe_get_attr(cluster, "attribute_name_list", []),
-            } for cluster in device.get_mandatory_clusters()],
+            } for cluster in device.get_all_mandatory_clusters()],
         }
         return result
 

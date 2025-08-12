@@ -68,6 +68,17 @@ class Device(BaseDevice):
                       key=lambda x:
                       (int(x.get_id(), 16), not x.server_cluster))
 
+    def get_all_mandatory_clusters(self):
+        """ """
+        mandatory_clusters_with_condition = []
+        mandatory_clusters_with_condition.extend(self.get_mandatory_clusters())
+        for cluster in self.clusters:
+            if cluster.mandatory_with_condition:
+                mandatory_clusters_with_condition.append(cluster)
+        return sorted(mandatory_clusters_with_condition,
+                      key=lambda x:
+                      (int(x.get_id(), 16), not x.server_cluster))
+
     def get_mandatory_clusters(self):
         """ """
         mandatory_clusters = []
@@ -619,6 +630,7 @@ class Cluster(BaseCluster):
         self.pics_code = None
         self.scope = None
         self.base_cluster_name = None
+        self.mandatory_with_condition = False
 
     def get_attribute_list(self):
         """Get all attributes sorted by attribute id, then by name if ids match"""

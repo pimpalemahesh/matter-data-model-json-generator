@@ -17,6 +17,7 @@ from typing import List
 from utils.file_utils import load_json_file
 from utils.file_utils import validate_file_path
 from utils.file_utils import write_to_json_file
+from utils.helper import convert_to_snake_case
 from utils.helper import esp_name
 from utils.logger import setup_logger
 
@@ -30,6 +31,8 @@ def create_cluster_lookup(
         clusters: List[Dict[str, Any]]) -> Dict[str, Dict[str, Any]]:
     """Create a lookup dictionary for clusters by ID.
 
+    :param clusters: List[Dict[str:
+    :param Any:
     :param clusters: List[Dict[str:
     :param Any]]:
 
@@ -46,6 +49,9 @@ def convert_feature_name_to_code(
         feature_name: str, cluster_features: List[Dict[str, Any]]) -> str:
     """Convert snake_case feature name to feature code.
 
+    :param feature_name: str:
+    :param cluster_features: List[Dict[str:
+    :param Any:
     :param feature_name: str:
     :param cluster_features: List[Dict[str:
     :param Any]]:
@@ -70,6 +76,8 @@ def merge_device_cluster_with_full_definition(
     """Merge device-specific cluster info with full cluster definition.
 
     :param device_cluster: Dict[str:
+    :param Any: param full_cluster: Dict[str:
+    :param device_cluster: Dict[str:
     :param Any]:
     :param full_cluster: Dict[str:
 
@@ -78,33 +86,37 @@ def merge_device_cluster_with_full_definition(
 
     # Override with device-specific information
     merged_cluster["type"] = device_cluster.get("type", "server")
+    merged_cluster["required"] = device_cluster.get("required", False)
 
-    # Handle features - only include features explicitly listed in device_types.json
+    # Handle features - include ALL features from full cluster
     device_features = device_cluster.get("features", [])
     full_features = full_cluster.get("features", [])
 
-    # Always filter features based on what's specified in device_types.json
-    filtered_features = []
-
-    # Only include features that are explicitly mentioned in device_types.json
+    # Create a set of device feature names for quick lookup (converted to snake_case)
+    device_feature_names = set()
     for feature_name in device_features:
-        # Convert device feature name to match cluster feature names
-        target_name = esp_name(feature_name)
+        device_feature_names.add(feature_name.lower())
+        device_feature_names.add(esp_name(feature_name).lower())
+        device_feature_names.add(convert_to_snake_case(feature_name).lower())
 
-        # Find matching feature in full cluster features
-        for feature in full_features:
-            feature_name_match = feature.get("name") == target_name
-            feature_code_match = feature.get("code") == target_name
-            # Also check for direct name match (case-insensitive)
-            direct_match = feature.get("name",
-                                       "").lower() == feature_name.lower()
+    # Include ALL features from the full cluster
+    enhanced_features = []
+    for feature in full_features:
+        feature_copy = feature.copy()
+        feature_name = feature.get("name", "")
+        feature_code = feature.get("code", "")
 
-            if feature_name_match or feature_code_match or direct_match:
-                filtered_features.append(feature)
-                break  # Found the feature, move to next device feature
+        # Check if this feature is required by the device
+        is_required = (feature_name.lower() in device_feature_names
+                       or feature_code.lower() in device_feature_names
+                       or convert_to_snake_case(feature_name).lower()
+                       in device_feature_names)
 
-    # Set filtered features (will be empty list if no device features specified)
-    merged_cluster["features"] = filtered_features
+        # Set the required flag based on device specification
+        feature_copy["required"] = is_required
+        enhanced_features.append(feature_copy)
+
+    merged_cluster["features"] = enhanced_features
 
     # Handle commands - filter based on device_types.json specification
     device_commands = device_cluster.get("commands", [])
@@ -165,6 +177,8 @@ def combine_clusters_and_devices(clusters_file: str,
 
     :param clusters_file: str:
     :param device_types_file: str:
+    :param clusters_file: str:
+    :param device_types_file: str:
 
     """
 
@@ -211,6 +225,9 @@ def combine_clusters_devices(clusters_file: str, device_types_file: str,
                              output_file: str):
     """Combine clusters.json and device_types.json to create enriched device definitions.
 
+    :param clusters_file: str:
+    :param device_types_file: str:
+    :param output_file: str:
     :param clusters_file: str:
     :param device_types_file: str:
     :param output_file: str:

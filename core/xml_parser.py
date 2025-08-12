@@ -225,9 +225,9 @@ def process_device_files(input_dir, device_json_file):
 def generate_json(chip_path, chip_version_dir, output_dir):
     """Generate JSON files for the given chip path and chip version.
 
-    :param chip_path:
-    :param chip_version_dir:
+    :param chip_path: param chip_version_dir:
     :param output_dir:
+    :param chip_version_dir:
 
     """
 
