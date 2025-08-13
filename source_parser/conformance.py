@@ -113,24 +113,8 @@ def _condition_has_feature(condition, feature_code):
     :param feature_code:
 
     """
-    if isinstance(condition, dict):
-        # Check for direct feature match
-        if "feature" in condition and condition["feature"] == feature_code:
+    if "feature" in condition and condition["feature"] == feature_code:
             return True
-
-        for key, value in condition.items():
-            if key == "not":
-                if (isinstance(value, dict) and "feature" in value
-                        and value["feature"] == feature_code):
-                    continue
-            elif isinstance(value, (dict, list)):
-                if _condition_has_feature(value, feature_code):
-                    return True
-
-    elif isinstance(condition, list):
-        for item in condition:
-            if _condition_has_feature(item, feature_code):
-                return True
     return False
 
 
