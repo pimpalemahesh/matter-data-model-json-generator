@@ -45,52 +45,72 @@ class AttributeSerializer:
     """ """
 
     @staticmethod
-    def to_dict(attr, attribute_map=None):
+    def to_dict(attr, attribute_map=None, serialize_mandatory=True):
         """Convert an Attribute object to dictionary representation
 
         :param attr: param attribute_map:  (Default value = None)
         :param attribute_map:  (Default value = None)
+        :param serialize_mandatory:  (Default value = True)
 
         """
-        return {
-            "name": safe_get_attr(attr, "name"),
-            "id": safe_get_attr(attr, "id"),
-        }
+        if serialize_mandatory:
+            return {
+                "name": safe_get_attr(attr, "name"),
+                "id": safe_get_attr(attr, "id"),
+                "mandatory": attr.is_plain_mandatory()
+            }
+        else:
+            return {
+                "name": safe_get_attr(attr, "name"),
+                "id": safe_get_attr(attr, "id"),
+            }
 
 
 class CommandSerializer:
     """ """
 
     @staticmethod
-    def to_dict(cmd, attribute_map=None):
+    def to_dict(cmd, attribute_map=None, serialize_mandatory=True):
         """Convert a Command object to dictionary representation
 
         :param cmd: param attribute_map:  (Default value = None)
         :param attribute_map:  (Default value = None)
 
         """
-        return {
-            "name": safe_get_attr(cmd, "name"),
-            "id": safe_get_attr(cmd, "id"),
-        }
-
+        if serialize_mandatory:
+            return {
+                "name": safe_get_attr(cmd, "name"),
+                "id": safe_get_attr(cmd, "id"),
+                "mandatory": cmd.is_plain_mandatory()
+            }
+        else:
+            return {
+                "name": safe_get_attr(cmd, "name"),
+                "id": safe_get_attr(cmd, "id"),
+            }
 
 class EventSerializer:
     """ """
 
     @staticmethod
-    def to_dict(event, attribute_map=None):
+    def to_dict(event, attribute_map=None, serialize_mandatory=True):
         """Convert an Event object to dictionary representation
 
         :param event: param attribute_map:  (Default value = None)
         :param attribute_map:  (Default value = None)
 
         """
-        return {
-            "name": safe_get_attr(event, "name"),
-            "id": event.get_id(),
-        }
-
+        if serialize_mandatory:
+            return {
+                "name": safe_get_attr(event, "name"),
+                "id": event.get_id(),
+                "mandatory": event.is_plain_mandatory()
+            }
+        else:
+            return {
+                "name": safe_get_attr(event, "name"),
+                "id": event.get_id(),
+            }
 
 class FeatureSerializer:
     """ """
@@ -112,15 +132,15 @@ class FeatureSerializer:
             safe_get_attr(feature, "code"),
             "required": False,
             "attributes": [
-                AttributeSerializer.to_dict(attr, attribute_map)
+                AttributeSerializer.to_dict(attr, attribute_map, serialize_mandatory=False)
                 for attr in feature.get_attribute_list()
             ],
             "commands": [
-                CommandSerializer.to_dict(cmd, attribute_map)
+                CommandSerializer.to_dict(cmd, attribute_map, serialize_mandatory=False)
                 for cmd in feature.get_command_list()
             ],
             "events": [
-                EventSerializer.to_dict(event, attribute_map)
+                EventSerializer.to_dict(event, attribute_map, serialize_mandatory=False)
                 for event in feature.get_event_list()
             ],
         }
@@ -167,15 +187,15 @@ class ClusterSerializer:
             "required": False,
             "attributes": [
                 AttributeSerializer.to_dict(attr, reference_map)
-                for attr in cluster.get_mandatory_attributes()
+                for attr in cluster.get_attribute_list()
             ],
             "commands": [
                 CommandSerializer.to_dict(cmd, reference_map)
-                for cmd in cluster.get_mandatory_commands()
+                for cmd in cluster.get_command_list()
             ],
             "events": [
                 EventSerializer.to_dict(event, reference_map)
-                for event in cluster.get_mandatory_events()
+                for event in cluster.get_event_list()
             ],
             "features": [
                 FeatureSerializer.to_dict(feature, reference_map)

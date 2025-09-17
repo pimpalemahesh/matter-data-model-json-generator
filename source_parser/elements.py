@@ -115,6 +115,15 @@ class Event(BaseEvent):
         super().__init__(name, id, is_mandatory)
         self.conformance = None
 
+    def is_plain_mandatory(self) -> bool:
+        """Check if the event is plain mandatory"""
+        if (self.is_mandatory
+                    and safe_get_attr(self, "conformance") is not None
+                    and safe_get_attr(safe_get_attr(self, "conformance"),
+                                      "condition") is None):
+            return True
+        return False
+
     def to_dict(self, attribute_map=None):
         """Convert event object to dictionary representation
 
@@ -346,6 +355,15 @@ class Command(BaseCommand):
             return False
 
         return True
+
+    def is_plain_mandatory(self) -> bool:
+        """Check if the attribute is plain mandatory"""
+        if (self.is_mandatory
+                    and safe_get_attr(self, "conformance") is not None
+                    and safe_get_attr(safe_get_attr(self, "conformance"),
+                                      "condition") is None):
+            return True
+        return False
 
     def to_dict(self, attribute_map=None):
         """Convert command object to dictionary representation
@@ -590,6 +608,15 @@ class Attribute(BaseAttribute):
         """Get the min value of the attribute"""
         return self.min_value
 
+    def is_plain_mandatory(self) -> bool:
+        """Check if the attribute is plain mandatory"""
+        if (self.is_mandatory
+                    and safe_get_attr(self, "conformance") is not None
+                    and safe_get_attr(safe_get_attr(self, "conformance"),
+                                      "condition") is None):
+            return True
+        return False
+
     def to_dict(self, attribute_map=None):
         """Convert attribute object to dictionary representation
 
@@ -634,29 +661,27 @@ class Cluster(BaseCluster):
 
     def get_attribute_list(self):
         """Get all attributes sorted by attribute id, then by name if ids match"""
-        attributes = list(attribute for attribute in self.attributes
-                          if attribute.is_mandatory)
-        attributes.sort(key=lambda x: (int(x.get_id(), 16), x.name))
-        return attributes
+        cluster_attributes = list(self.attributes)
+        cluster_attributes.sort(key=lambda x: (int(x.get_id(), 16), x.name))
+        return cluster_attributes
 
     def get_command_list(self):
         """Get all commands sorted by command id, then by name if ids match"""
-        commands = list(command for command in self.commands
-                        if command.is_mandatory)
-        commands.sort(key=lambda x: (int(x.get_id(), 16), x.name))
-        return commands
+        cluster_commands = list(self.commands)
+        cluster_commands.sort(key=lambda x: (int(x.get_id(), 16), x.name))
+        return cluster_commands
 
     def get_event_list(self):
         """Get all events sorted by event id, then by name if ids match"""
-        events = list(self.events)
-        events.sort(key=lambda x: (int(x.get_id(), 16), x.name))
-        return events
+        cluster_events = list(self.events)
+        cluster_events.sort(key=lambda x: (int(x.get_id(), 16), x.name))
+        return cluster_events
 
     def get_feature_list(self):
         """Get all features sorted by feature id"""
-        features = list(self.features)
-        features.sort(key=lambda x: int(x.get_id(), 16))
-        return features
+        cluster_features = list(self.features)
+        cluster_features.sort(key=lambda x: int(x.get_id(), 16))
+        return cluster_features
 
     def get_feature_choice_list(self) -> list[Feature]:
         """Get the list of features with optional conformance and choice attributes sorted by feature id

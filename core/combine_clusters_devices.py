@@ -26,6 +26,32 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 logger = setup_logger()
 
+def merge_items(device_items, cluster_items, merged_cluster, key="commands"):
+    """
+    Merge cluster items (commands/attributes) with device overrides.
+    Keeps mandatory ones and those explicitly listed in device.
+    """
+    items_by_name = {item["name"]: dict(item) for item in cluster_items}
+
+    # Select mandatory + explicitly included items
+    required = {}
+    for item in cluster_items:
+        if item.get("mandatory"):
+            required[item["name"]] = dict(item)
+
+    for name in device_items:
+        if name in items_by_name:
+            required[name] = dict(items_by_name[name])
+
+    # Remove "mandatory" key if present
+    for item in required.values():
+        item.pop("mandatory", None)
+
+    # Sort by ID (hex) then name
+    merged_cluster[key] = sorted(
+        required.values(),
+        key=lambda x: (int(x.get("id", "0"), 16), x.get("name", ""))
+    )
 
 def create_cluster_lookup(
         clusters: List[Dict[str, Any]]) -> Dict[str, Dict[str, Any]]:
@@ -116,57 +142,12 @@ def merge_device_cluster_with_full_definition(
         feature_copy["required"] = is_required
         enhanced_features.append(feature_copy)
 
+    enhanced_features.sort(key=lambda x: (int(x.get("id", "0"), 16), x.get("name", "")))
     merged_cluster["features"] = enhanced_features
 
-    # Handle commands - filter based on device_types.json specification
-    device_commands = device_cluster.get("commands", [])
-    full_commands = full_cluster.get("commands", [])
-
-    # If device has specific commands listed, filter to only those
-    if device_commands:
-        filtered_commands = []
-        for command_name in device_commands:
-            # Find matching command in full cluster commands
-            for command in full_commands:
-                full_command_name = command.get("name", "")
-                # Convert command name to snake_case for comparison
-                snake_case_name = full_command_name.replace(" ", "_").lower()
-                # Also check direct name match
-                direct_match = full_command_name.lower() == command_name.lower(
-                )
-
-                if snake_case_name == command_name or direct_match:
-                    filtered_commands.append(command)
-                    break  # Found the command, move to next device command
-        merged_cluster["commands"] = filtered_commands
-    else:
-        # If device has empty commands list, include all commands from cluster
-        merged_cluster["commands"] = full_commands
-
-    # Handle attributes - filter based on device_types.json specification
-    device_attributes = device_cluster.get("attributes", [])
-    full_attributes = full_cluster.get("attributes", [])
-
-    # If device has specific attributes listed, filter to only those
-    if device_attributes:
-        filtered_attributes = []
-        for attribute_name in device_attributes:
-            # Find matching attribute in full cluster attributes
-            for attribute in full_attributes:
-                full_attribute_name = attribute.get("name", "")
-                # Convert attribute name to snake_case for comparison
-                snake_case_name = full_attribute_name.replace(" ", "_").lower()
-                # Also check direct name match
-                direct_match = full_attribute_name.lower(
-                ) == attribute_name.lower()
-
-                if snake_case_name == attribute_name or direct_match:
-                    filtered_attributes.append(attribute)
-                    break  # Found the attribute, move to next device attribute
-        merged_cluster["attributes"] = filtered_attributes
-    else:
-        # If device has empty attributes list, include all attributes from cluster
-        merged_cluster["attributes"] = full_attributes
+    merge_items(device_cluster.get("commands", []), full_cluster.get("commands", []), merged_cluster, "commands")
+    merge_items(device_cluster.get("attributes", []), full_cluster.get("attributes", []), merged_cluster, "attributes")
+    merge_items(device_cluster.get("events", []), full_cluster.get("events", []), merged_cluster, "events")
 
     return merged_cluster
 
